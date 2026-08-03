@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN PANEL // QAQEN QC</title>
+    <link rel="icon" id="siteFavicon" href="">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { dark: '#030303', dark2: '#0d0d12', dark3: '#161622', hudCyan: '#00f3ff' },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], oswald: ['Oswald', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #030303; color: #fff; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        .glass-panel { background: rgba(12, 12, 18, 0.8); backdrop-filter: blur(25px); border: 1px solid rgba(0, 243, 255, 0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
+        .form-input { background: rgba(20, 20, 30, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; border-radius: 10px; padding: 12px 16px; width: 100%; transition: all 0.4s; font-size: 0.9rem; }
+        .form-input:focus { border-color: #00f3ff; outline: none; background: rgba(25, 25, 40, 0.9); box-shadow: 0 0 20px rgba(0, 243, 255, 0.3); }
+        .form-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: #00f3ff; margin-bottom: 6px; display: block; font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-cyber { background: linear-gradient(135deg, rgba(0,243,255,0.2), rgba(0,243,255,0.05)); color: #00f3ff; font-weight: 700; border: 1px solid rgba(0,243,255,0.5); padding: 14px 20px; border-radius: 10px; transition: all 0.4s; text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
+        .btn-cyber:hover { background: #00f3ff; color: #000; box-shadow: 0 0 30px rgba(0, 243, 255, 0.7); transform: translateY(-2px); }
+        .role-badge { font-size: 0.6rem; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+        .badge-owner { background: rgba(255, 215, 0, 0.15); color: #FFD700; border: 1px solid rgba(255, 215, 0, 0.4); }
+        .badge-leader { background: rgba(255, 51, 51, 0.15); color: #FF3333; border: 1px solid rgba(255, 51, 51, 0.4); }
+        .badge-support { background: rgba(51, 153, 255, 0.15); color: #3399FF; border: 1px solid rgba(51, 153, 255, 0.4); }
+        .badge-member { background: rgba(51, 204, 51, 0.15); color: #33CC33; border: 1px solid rgba(51, 204, 51, 0.4); }
+        #loginOverlay { background: radial-gradient(circle at center, rgba(3,3,5,0.92) 0%, rgba(1,1,2,0.98) 100%); backdrop-filter: blur(30px); }
+        .login-card { position: relative; background: rgba(10, 10, 16, 0.85); border: 1px solid rgba(0, 243, 255, 0.3); box-shadow: 0 25px 60px rgba(0,0,0,0.9); }
+        .login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #00f3ff, transparent); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4">
+
+    <div id="loginOverlay" class="fixed inset-0 z-50 flex items-center justify-center transition-all duration-700">
+        <div class="login-card p-10 rounded-2xl w-full max-w-md flex flex-col gap-6" id="loginBox">
+            <div class="text-center border-b border-gray-800 pb-5">
+                <h2 class="font-oswald text-2xl tracking-[0.2em] uppercase font-bold text-white mb-1">QAQEN QC</h2>
+                <p class="text-[0.65rem] text-hudCyan tracking-[0.35em] uppercase font-semibold">ADMIN MANAGEMENT PORTAL</p>
+            </div>
+            <div class="space-y-5">
+                <div>
+                    <label class="form-label">ADMIN EMAIL</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="ENTER ADMIN EMAIL">
+                </div>
+                <div>
+                    <label class="form-label">PASSWORD</label>
+                    <input type="password" id="loginPass" class="form-input" placeholder="••••••••••••">
+                </div>
+                <button id="btnLogin" class="btn-cyber w-full mt-2">AUTHORIZE ACCESS</button>
+            </div>
+            <div class="text-center mt-2">
+                <a href="index.html" class="text-[0.65rem] text-gray-500 hover:text-hudCyan tracking-widest uppercase transition-colors">◀ RETURN TO MAIN HUB</a>
+            </div>
+        </div>
+    </div>
+
+    <header class="w-full max-w-6xl mb-8 text-center relative">
+        <a href="index.html" class="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs tracking-widest border border-gray-800 px-4 py-2 rounded-lg transition-all">◀ กลับหน้าหลัก</a>
+        <h1 class="font-oswald text-4xl tracking-[0.2em] uppercase font-bold text-white mb-2">System Dashboard</h1>
+        <p class="text-xs text-gray-500 tracking-[0.3em] uppercase">QAQEN QC Management System</p>
+    </header>
+
+    <div class="w-full max-w-6xl flex gap-4 justify-center mb-8">
+        <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="px-6 py-3 rounded-xl border border-gray-700 bg-dark2 text-gray-300 hover:bg-dark3 transition-all text-sm tracking-widest font-semibold uppercase">⚙️ ตั้งค่าหน้าแรก (Index)</button>
+        <button onclick="switchTab('tab-members')" id="btn-tab-members" class="px-6 py-3 rounded-xl border border-gray-700 bg-dark2 text-gray-300 hover:bg-dark3 transition-all text-sm tracking-widest font-semibold uppercase">👥 จัดการรายชื่อสมาชิก</button>
+    </div>
+
+    <div id="tab-settings" class="tab-content w-full max-w-6xl">
+        <div class="glass-panel rounded-lg p-8 shadow-2xl border border-gray-800">
+            <h2 class="font-oswald text-xl tracking-widest mb-6 border-b border-gray-800 pb-4 uppercase text-gray-200">Homepage Configuration</h2>
+            
+            <form id="settingsForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="form-label">Background Image URL</label>
+                        <input type="text" id="set_bgUrl" class="form-input" placeholder="https://...">
+                    </div>
+                    <div>
+                        <label class="form-label">Main Logo URL</label>
+                        <input type="text" id="set_logoUrl" class="form-input" placeholder="https://...">
+                    </div>
+                    <div>
+                        <label class="form-label">Favicon URL</label>
+                        <input type="text" id="set_faviconUrl" class="form-input" placeholder="https://...">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-800">
+                    <div>
+                        <label class="form-label">Logo Width (เช่น 280px, 90%)</label>
+                        <input type="text" id="set_logoWidth" class="form-input" placeholder="ex. 300px">
+                    </div>
+                    <div>
+                        <label class="form-label">Background Opacity (0.0 - 1.0)</label>
+                        <input type="number" step="0.05" min="0" max="1" id="set_bgOpacity" class="form-input" placeholder="ex. 0.88">
+                    </div>
+                    <div>
+                        <label class="form-label">Default Member Avatar URL</label>
+                        <input type="text" id="set_defaultAvatar" class="form-input" placeholder="https://...">
+                    </div>
+                </div>
+
+                <h3 class="font-oswald text-xl tracking-widest mt-8 border-b border-gray-800 pb-2 text-gray-300">Text Settings</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 border border-gray-800 rounded-xl bg-black/30">
+                        <label class="form-label text-yellow-400">Index Main Title</label>
+                        <input type="text" id="set_mainTitle" class="form-input mb-3">
+                        <label class="form-label text-yellow-400">Index Sub Title</label>
+                        <input type="text" id="set_subTitle" class="form-input">
+                    </div>
+                    <div class="p-4 border border-gray-800 rounded-xl bg-black/30">
+                        <label class="form-label text-green-400">Member Page Title</label>
+                        <input type="text" id="set_memberTitle" class="form-input mb-3">
+                        <label class="form-label text-green-400">Member Sub Title</label>
+                        <input type="text" id="set_memberSubTitle" class="form-input">
+                    </div>
+                </div>
+
+                <h3 class="font-oswald text-xl tracking-widest mt-8 border-b border-gray-800 pb-2 text-gray-300">Buttons Settings</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-4 border border-gray-800 rounded-xl bg-black/30">
+                        <label class="form-label text-blue-400">Far Left Button</label>
+                        <input type="text" id="set_farLeftBtnText" class="form-input mb-3" placeholder="Text">
+                        <input type="text" id="set_farLeftBtnUrl" class="form-input" placeholder="URL">
+                    </div>
+                    <div class="p-4 border border-gray-800 rounded-xl bg-black/30">
+                        <label class="form-label text-blue-400">Left Button</label>
+                        <input type="text" id="set_leftBtnText" class="form-input mb-3" placeholder="Text">
+                        <input type="text" id="set_leftBtnUrl" class="form-input" placeholder="URL">
+                    </div>
+                    <div class="p-4 border border-gray-600 rounded-xl bg-gray-900 opacity-60">
+                        <label class="form-label text-white font-bold">🔒 Center Button</label>
+                        <input type="text" class="form-input mb-3 cursor-not-allowed text-gray-500" value="MEMBER" disabled>
+                        <input type="text" class="form-input cursor-not-allowed text-gray-500" value="member.html" disabled>
+                    </div>
+                    <div class="p-4 border border-gray-800 rounded-xl bg-black/30">
+                        <label class="form-label text-blue-400">Right Button</label>
+                        <input type="text" id="set_rightBtnText" class="form-input mb-3" placeholder="Text">
+                        <input type="text" id="set_rightBtnUrl" class="form-input" placeholder="URL">
+                    </div>
+                    <div class="p-4 border border-gray-800 rounded-xl bg-black/30">
+                        <label class="form-label text-blue-400">Far Right Button</label>
+                        <input type="text" id="set_farRightBtnText" class="form-input mb-3" placeholder="Text">
+                        <input type="text" id="set_farRightBtnUrl" class="form-input" placeholder="URL">
+                    </div>
+                </div>
+
+                <h3 class="font-oswald text-xl tracking-widest mt-8 border-b border-gray-800 pb-2 text-gray-300">Music Widget Settings</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><label class="form-label">Music Title</label><input type="text" id="set_musicTitle" class="form-input"></div>
+                    <div><label class="form-label">Cover Image URL</label><input type="text" id="set_musicCoverUrl" class="form-input"></div>
+                    <div><label class="form-label">Source Link Text</label><input type="text" id="set_musicLinkText" class="form-input"></div>
+                    <div><label class="form-label">Source Link URL</label><input type="text" id="set_musicLinkUrl" class="form-input"></div>
+                </div>
+
+                <div class="pt-6 flex justify-end gap-3">
+                    <button type="button" id="btnResetSettings" class="px-5 py-3 rounded-xl border border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-xs tracking-widest font-bold uppercase">🔄 คืนค่าเดิม</button>
+                    <button type="button" id="btnSaveSettings" class="btn-cyber w-full md:w-auto">💾 บันทึกการตั้งค่า</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="tab-members" class="tab-content w-full max-w-6xl">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1">
+                <div class="glass-panel rounded-lg p-6 sticky top-6 shadow-2xl border border-gray-800">
+                    <h2 id="memberFormTitle" class="font-oswald text-lg tracking-widest mb-6 border-b border-gray-800 pb-4 uppercase text-gray-200">Add New Member</h2>
+                    
+                    <form id="memberForm" class="space-y-4">
+                        <input type="hidden" id="mem_id">
+                        <div>
+                            <label class="form-label">Member Name</label>
+                            <input type="text" id="mem_name" class="form-input" placeholder="JOHN DOE" required>
+                        </div>
+                        <div>
+                            <label class="form-label">Role Category</label>
+                            <select id="mem_role" class="form-input" required>
+                                <option value="" disabled selected>-- เลือกตำแหน่ง --</option>
+                                <option value="THE BOSSS">🟡 THE BOSSS</option>
+                                <option value="LEADERS">🔴 LEADERS</option>
+                                <option value="SUPPORT">🔵 SUPPORT</option>
+                                <option value="MEMBERS">🟢 MEMBERS</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Avatar URL (เว้นว่างเพื่อใช้ Default)</label>
+                            <input type="text" id="mem_avatar" class="form-input" placeholder="https://...">
+                        </div>
+                        <div>
+                            <label class="form-label">Facebook Profile URL</label>
+                            <input type="text" id="mem_facebook" class="form-input" placeholder="https://facebook.com/...">
+                        </div>
+                        <div class="pt-4 flex gap-2">
+                            <button type="submit" id="btnSaveMember" class="btn-cyber flex-1">➕ บันทึกข้อมูล</button>
+                            <button type="button" id="btnCancelEdit" class="px-4 py-2 bg-gray-800 text-white rounded-lg hidden hover:bg-gray-700">ยกเลิก</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="glass-panel rounded-lg p-6 shadow-2xl border border-gray-800">
+                    <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                        <h2 class="font-oswald text-lg tracking-widest uppercase text-gray-200">Member Roster Database</h2>
+                        <span id="totalMembers" class="text-xs text-gray-500 tracking-widest uppercase">TOTAL: 0</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-800">
+                                    <th class="pb-3 pl-2">Profile</th>
+                                    <th class="pb-3">Name</th>
+                                    <th class="pb-3">Role</th>
+                                    <th class="pb-3 text-right pr-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membersTableBody" class="text-sm">
+                                <tr><td colspan="4" class="text-center py-8 text-gray-600">กำลังโหลดข้อมูล...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        const loginOverlay = document.getElementById('loginOverlay');
+        const loginBox = document.getElementById('loginBox');
+        const loginEmail = document.getElementById('loginEmail');
+        const loginPass = document.getElementById('loginPass');
+        const btnLogin = document.getElementById('btnLogin');
+
+        if (sessionStorage.getItem('eliteAdminAuth') === 'granted') {
+            loginOverlay.style.display = 'none';
+        }
+
+        btnLogin.addEventListener('click', () => {
+            const email = loginEmail.value.trim();
+            const pass = loginPass.value.trim();
+            
+            if (email === 'qaqentestv2@gmail.com' && pass === 'qaqentestv22806') {
+                sessionStorage.setItem('eliteAdminAuth', 'granted');
+                loginBox.style.transform = 'scale(0.95)';
+                loginOverlay.style.opacity = '0';
+                setTimeout(() => { loginOverlay.style.display = 'none'; }, 700);
+                Swal.fire({ icon: 'success', title: 'ACCESS GRANTED', text: 'ยินดีต้อนรับสู่ระบบจัดการ QAQEN QC', timer: 1500, showConfirmButton: false, background: '#0a0a10', color: '#fff' });
+            } else {
+                Swal.fire({ icon: 'error', title: 'ACCESS DENIED', text: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง', background: '#0a0a10', color: '#fff', confirmButtonColor: '#00f3ff' });
+                loginEmail.value = ''; loginPass.value = '';
+            }
+        });
+
+        loginPass.addEventListener('keypress', (e) => { if(e.key === 'Enter') btnLogin.click(); });
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyAMC27A972IEnrXG2-kWCOTKJZLRM7Adaw", authDomain: "eltiestylecustom.firebaseapp.com", projectId: "eltiestylecustom", storageBucket: "eltiestylecustom.firebasestorage.app", messagingSenderId: "763447692670", appId: "1:763447692670:web:687333af7f0e3f253db72f" };
+
+        let app, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+        } catch (error) { console.error("Firebase Init Error:", error); }
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            document.getElementById('btn-tab-settings').classList.replace('bg-white', 'bg-dark2');
+            document.getElementById('btn-tab-settings').classList.replace('text-black', 'text-gray-300');
+            document.getElementById('btn-tab-members').classList.replace('bg-white', 'bg-dark2');
+            document.getElementById('btn-tab-members').classList.replace('text-black', 'text-gray-300');
+            
+            const activeBtn = document.getElementById(tabId === 'tab-settings' ? 'btn-tab-settings' : 'btn-tab-members');
+            activeBtn.classList.replace('bg-dark2', 'bg-white');
+            activeBtn.classList.replace('text-gray-300', 'text-black');
+        }
+        
+        switchTab('tab-settings');
+
+        const settingsFields = ['bgUrl', 'logoUrl', 'faviconUrl', 'logoWidth', 'bgOpacity', 'defaultAvatar', 'mainTitle', 'subTitle', 'memberTitle', 'memberSubTitle', 'farLeftBtnText', 'farLeftBtnUrl', 'leftBtnText', 'leftBtnUrl', 'rightBtnText', 'rightBtnUrl', 'farRightBtnText', 'farRightBtnUrl', 'musicTitle', 'musicCoverUrl', 'musicLinkText', 'musicLinkUrl'];
+
+        onSnapshot(doc(db, "settings", "homepage"), (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                settingsFields.forEach(field => {
+                    const input = document.getElementById(`set_${field}`);
+                    if(input && data[field] !== undefined) input.value = data[field];
+                });
+                if (data.faviconUrl) {
+                    const faviconTag = document.getElementById('siteFavicon');
+                    if (faviconTag) faviconTag.href = data.faviconUrl;
+                }
+            }
+        });
+
+        document.getElementById('btnSaveSettings').addEventListener('click', async () => {
+            const dataToSave = {};
+            settingsFields.forEach(field => {
+                dataToSave[field] = document.getElementById(`set_${field}`).value;
+            });
+            
+            try {
+                Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                await setDoc(doc(db, "settings", "homepage"), dataToSave, { merge: true });
+                Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'การตั้งค่าระบบได้รับการอัปเดตแล้ว', timer: 2000, showConfirmButton: false });
+            } catch (error) { Swal.fire('เกิดข้อผิดพลาด', error.message, 'error'); }
+        });
+
+        document.getElementById('btnResetSettings').addEventListener('click', async () => {
+            Swal.fire({
+                title: 'ยืนยันคืนค่าเดิม?',
+                text: "ค่าการตั้งค่าทั้งหมดจะถูกรีเซ็ตเป็นค่ามาตรฐาน",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#00f3ff',
+                cancelButtonColor: '#333',
+                confirmButtonText: 'ใช่, รีเซ็ตเลย!',
+                cancelButtonText: 'ยกเลิก',
+                background: '#0a0a10',
+                color: '#fff'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const defaultSettings = {
+                        bgUrl: '', logoUrl: '', faviconUrl: '',
+                        logoWidth: '280px', bgOpacity: '0.88',
+                        defaultAvatar: 'https://placehold.co/150/222/777?text=U',
+                        mainTitle: 'QAQEN QC', subTitle: 'OFFICIAL HUB',
+                        memberTitle: 'EXECUTIVE ROSTER', memberSubTitle: 'OFFICIAL MEMBER DATABASE'
+                    };
+                    try {
+                        Swal.fire({ title: 'กำลังรีเซ็ต...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                        await setDoc(doc(db, "settings", "homepage"), defaultSettings, { merge: true });
+                        Swal.fire({ icon: 'success', title: 'คืนค่าเดิมสำเร็จ', timer: 1500, showConfirmButton: false });
+                    } catch (error) { Swal.fire('Error', error.message, 'error'); }
+                }
+            });
+        });
+
+        let allMembers = [];
+        const tableBody = document.getElementById('membersTableBody');
+        const form = document.getElementById('memberForm');
+        
+        function getBadgeClass(role) {
+            if(role === 'THE BOSSS') return 'badge-owner';
+            if(role === 'LEADERS') return 'badge-leader';
+            if(role === 'SUPPORT') return 'badge-support';
+            return 'badge-member';
+        }
+
+        onSnapshot(collection(db, "members"), (snapshot) => {
+            allMembers = [];
+            tableBody.innerHTML = '';
+            
+            if(snapshot.empty) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-600">-- ไม่มีรายชื่อสมาชิกในระบบ --</td></tr>';
+                document.getElementById('totalMembers').innerText = `TOTAL: 0`;
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                allMembers.push({ id: doc.id, ...data });
+            });
+
+            const roleOrder = { 'THE BOSSS': 1, 'LEADERS': 2, 'SUPPORT': 3, 'MEMBERS': 4 };
+            allMembers.sort((a, b) => (roleOrder[a.role] || 5) - (roleOrder[b.role] || 5));
+            
+            document.getElementById('totalMembers').innerText = `TOTAL: ${allMembers.length}`;
+
+            allMembers.forEach(member => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-800 hover:bg-gray-900/50 transition-colors';
+                const avatar = member.avatar || 'https://placehold.co/100/333/fff?text=U';
+                
+                tr.innerHTML = `
+                    <td class="py-3 pl-2"><img src="${avatar}" class="w-10 h-10 rounded-full object-cover border border-gray-600" alt="avatar"></td>
+                    <td class="py-3 text-white font-medium tracking-wide">${member.name}</td>
+                    <td class="py-3"><span class="role-badge ${getBadgeClass(member.role)}">${member.role}</span></td>
+                    <td class="py-3 text-right pr-2">
+                        <button onclick="editMember('${member.id}')" class="text-hudCyan hover:underline text-sm mr-3">✏️ Edit</button>
+                        <button onclick="deleteMember('${member.id}')" class="text-red-400 hover:underline text-sm">🗑️ Del</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('mem_id').value;
+            const data = {
+                name: document.getElementById('mem_name').value.toUpperCase(),
+                role: document.getElementById('mem_role').value,
+                avatar: document.getElementById('mem_avatar').value.trim(),
+                facebookUrl: document.getElementById('mem_facebook').value
+            };
+
+            try {
+                Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                if(id) {
+                    await updateDoc(doc(db, "members", id), data);
+                    Swal.fire({ icon: 'success', title: 'อัปเดตสำเร็จ', timer: 1500, showConfirmButton: false });
+                } else {
+                    await addDoc(collection(db, "members"), data);
+                    Swal.fire({ icon: 'success', title: 'เพิ่มสมาชิกสำเร็จ', timer: 1500, showConfirmButton: false });
+                }
+                resetForm();
+            } catch (error) { Swal.fire('Error', error.message, 'error'); }
+        });
+
+        window.editMember = function(id) {
+            const member = allMembers.find(m => m.id === id);
+            if(member) {
+                document.getElementById('mem_id').value = member.id;
+                document.getElementById('mem_name').value = member.name;
+                document.getElementById('mem_role').value = member.role;
+                document.getElementById('mem_avatar').value = member.avatar || '';
+                document.getElementById('mem_facebook').value = member.facebookUrl || '';
+                
+                document.getElementById('memberFormTitle').innerHTML = '✏️ Edit Member';
+                document.getElementById('btnSaveMember').innerHTML = '💾 อัปเดตข้อมูล';
+                document.getElementById('btnCancelEdit').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        document.getElementById('btnCancelEdit').addEventListener('click', resetForm);
+        
+        function resetForm() {
+            form.reset();
+            document.getElementById('mem_id').value = '';
+            document.getElementById('memberFormTitle').innerHTML = 'Add New Member';
+            document.getElementById('btnSaveMember').innerHTML = '➕ บันทึกข้อมูล';
+            document.getElementById('btnCancelEdit').classList.add('hidden');
+        }
+
+        window.deleteMember = function(id) {
+            Swal.fire({
+                title: 'ยืนยันการลบ?', text: "หากลบแล้วจะไม่สามารถกู้คืนได้!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#ff3333', cancelButtonColor: '#333',
+                confirmButtonText: 'ใช่, ลบเลย!', cancelButtonText: 'ยกเลิก', background: '#0a0a10', color: '#fff'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        await deleteDoc(doc(db, "members", id));
+                        Swal.fire({ icon: 'success', title: 'ลบเรียบร้อย', timer: 1500, showConfirmButton: false });
+                    } catch (error) { Swal.fire('Error', error.message, 'error'); }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
