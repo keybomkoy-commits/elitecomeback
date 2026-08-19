@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elitestyle - Coming Soon</title>
+    <!-- ฟอนต์เรียบหรู -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;700&family=Prompt:wght@200;300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --glow-color: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100vh;
+            background-color: #050505;
+            font-family: 'Prompt', sans-serif;
+            color: var(--text-main);
+            overflow: hidden;
+            perspective: 1000px; /* สำหรับเอฟเฟกต์ 3D */
+        }
+
+        /* ----------------------------------
+           Background & Effects Layers
+        ----------------------------------- */
+        .bg-container {
+            position: absolute;
+            top: -5%; left: -5%;
+            width: 110%; height: 110%;
+            z-index: 1;
+        }
+
+        .background-image {
+            width: 100%; height: 100%;
+            background-image: url('bg.png'); /* รูปของคุณ */
+            background-size: cover;
+            background-position: center;
+            filter: grayscale(100%) contrast(1.2) brightness(0.8);
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        #particle-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .noise {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/76/1k_Dissolve_Noise_Texture.png');
+            opacity: 0.05;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        /* ----------------------------------
+           Content Layout & 3D Card
+        ----------------------------------- */
+        .content-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .main-card {
+            padding: 60px 100px;
+            background: rgba(15, 15, 15, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+            text-align: center;
+            /* 3D Transform เตรียมไว้ให้ JS จัดการ */
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+        }
+
+        .main-card:hover {
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        /* ----------------------------------
+           Typography & Animations
+        ----------------------------------- */
+        .anim-item {
+            opacity: 0;
+            transform: translateY(30px) translateZ(30px);
+            filter: blur(10px);
+            animation: cinematicReveal 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+
+        .delay-1 { animation-delay: 0.2s; }
+        .delay-2 { animation-delay: 0.4s; }
+        .delay-3 { animation-delay: 0.6s; }
+        .delay-4 { animation-delay: 1.2s; }
+
+        .subtitle {
+            font-weight: 300;
+            font-size: 1.2rem;
+            color: #cccccc;
+            letter-spacing: 0.1em;
+            margin-bottom: -5px;
+            text-transform: uppercase;
+        }
+
+        .title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 4.5rem;
+            letter-spacing: 0.25em;
+            margin: 10px 0 30px 0;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #fff, #888, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(255,255,255,0.1);
+            /* ยื่นออกมาจากกล่องแบบ 3D */
+            transform: translateZ(50px);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 12px 40px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 30px;
+            font-weight: 400;
+            font-size: 1rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            cursor: pointer;
+            background: transparent;
+            color: #fff;
+            transform: translateZ(20px);
+        }
+
+        .status-badge::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .status-badge:hover {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            box-shadow: 0 0 20px var(--glow-color);
+            transform: translateZ(30px) scale(1.05);
+        }
+
+        .status-badge:hover::before {
+            left: 100%;
+        }
+
+        .credit {
+            position: absolute;
+            bottom: 40px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.3em;
+            color: var(--text-muted);
+        }
+
+        .credit span {
+            color: #ffffff;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        @keyframes cinematicReveal {
+            0% {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+                filter: blur(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-card { padding: 40px 20px; border: none; background: transparent; backdrop-filter: none; box-shadow: none; }
+            .title { font-size: 2.5rem; letter-spacing: 0.15em; margin-bottom: 20px; }
+            .subtitle { font-size: 1rem; }
+            .main-card:hover { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- พื้นหลัง -->
+    <div class="bg-container">
+        <div class="background-image" id="bg"></div>
+    </div>
+    
+    <!-- ละอองฝุ่นลอยไปมา -->
+    <canvas id="particle-canvas"></canvas>
+    
+    <!-- ฟิลเตอร์แต่งภาพ -->
+    <div class="overlay"></div>
+    <div class="noise"></div>
+
+    <!-- คอนเทนต์หลัก -->
+    <div class="content-wrapper">
+        <div class="main-card" id="card">
+            <p class="subtitle anim-item delay-1">กำลังทำเว็บรายชื่อของตระกูลใหม่</p>
+            <h1 class="title anim-item delay-2">Elitestyle</h1>
+            <div class="status-badge anim-item delay-3">เร็วๆ นี้</div>
+        </div>
+        
+        <div class="credit anim-item delay-4">BY <span>QAQENELITE</span></div>
+    </div>
+
+    <!-- Script ควบคุมความสมูท 3D และ Particles -->
+    <script>
+        // --- 1. เอฟเฟกต์เมาส์ 3D และ Parallax พื้นหลัง ---
+        const card = document.getElementById('card');
+        const bg = document.getElementById('bg');
+        
+        document.addEventListener('mousemove', (e) => {
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // หาจุดศูนย์กลาง
+            const centerX = windowWidth / 2;
+            const centerY = windowHeight / 2;
+            
+            // ตำแหน่งเมาส์เทียบกับศูนย์กลาง
+            const mouseX = e.clientX - centerX;
+            const mouseY = e.clientY - centerY;
+            
+            // ขยับกล่องแบบ 3D (ยิ่งหารเยอะ ยิ่งเอียงน้อย)
+            const rotateX = (mouseY / windowHeight) * -20;
+            const rotateY = (mouseX / windowWidth) * 20;
+            
+            // ขยับพื้นหลัง (Parallax)
+            const moveX = (mouseX / windowWidth) * -30;
+            const moveY = (mouseY / windowHeight) * -30;
+
+            // อัปเดต CSS
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            bg.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.05)`;
+        });
+
+        // คืนค่ากล่องเมื่อเมาส์ออกนอกจอ
+        document.addEventListener('mouseleave', () => {
+            card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg)`;
+            bg.style.transform = `translate(0px, 0px) scale(1)`;
+        });
+
+        // --- 2. เอฟเฟกต์ละอองฝุ่นลอยสมูทๆ (Ambient Particles) ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particlesArray = [];
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.1;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * -0.5 - 0.2; // ลอยขึ้นช้าๆ
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // วนลูปกลับมาเมื่อหลุดขอบจอ
+                if (this.y < 0) this.y = canvas.height;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            const numberOfParticles = (canvas.width * canvas.height) / 8000; // คำนวณจำนวนตามขนาดจอ
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        initParticles();
+        animateParticles();
+    </script>
+</body>
+</html>
