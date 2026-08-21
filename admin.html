@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Control Center</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #030303;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+        }
+        .custom-input {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .custom-input:focus {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(30, 30, 30, 0.9);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+            outline: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .anim-fade {
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        #toast {
+            position: fixed; top: 24px; right: 24px; z-index: 9999;
+            transform: translateY(-100px); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #toast.show {
+            transform: translateY(0); opacity: 1;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030303; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #404040; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 md:p-8">
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="glass-panel px-5 py-4 rounded-2xl flex items-center gap-3 border border-white/15 shadow-2xl">
+        <div id="toastIcon" class="w-7 h-7 rounded-full flex items-center justify-center text-black font-bold text-xs"></div>
+        <div>
+            <h4 id="toastTitle" class="text-xs font-bold uppercase tracking-wider text-white"></h4>
+            <p id="toastDesc" class="text-[11px] text-gray-400"></p>
+        </div>
+    </div>
+
+    <!-- CUSTOM CONFIRM MODAL -->
+    <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="glass-panel p-6 rounded-2xl max-w-sm w-full text-center border border-white/10 scale-95 transition-transform duration-300" id="confirmBox">
+            <div class="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+            </div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-white mb-2">ยืนยันการลบข้อมูล</h3>
+            <p class="text-xs text-gray-400 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบสมาชิกคนนี้? การกระทำนี้จะไม่สามารถย้อนกลับได้</p>
+            <div class="flex gap-2">
+                <button id="confirmYes" class="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl transition-all">ลบข้อมูล</button>
+                <button id="confirmNo" class="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 text-xs rounded-xl transition-all border border-white/10">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginSection" class="glass-panel p-8 md:p-10 rounded-3xl w-full max-w-md anim-fade">
+        <div class="text-center mb-8">
+            <div class="w-12 h-12 bg-white text-black rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-white/10">
+                <i class="fa-solid fa-lock text-lg"></i>
+            </div>
+            <h2 class="font-bebas text-4xl tracking-widest text-white uppercase">LOGIN</h2>
+            <p class="text-xs text-gray-500 tracking-widest mt-1">COMMAND CENTER</p>
+        </div>
+        
+        <div class="space-y-5">
+            <div>
+                <label class="text-[10px] uppercase font-bold tracking-widest text-gray-400 block mb-2">Admin Password</label>
+                <input type="password" id="adminPass" placeholder="••••••••••••" class="custom-input w-full rounded-xl px-4 py-3.5 text-xs">
+            </div>
+            <button id="loginBtn" class="w-full py-3.5 bg-white hover:bg-gray-200 text-black font-bold rounded-xl transition-all uppercase tracking-widest text-xs shadow-lg shadow-white/5">
+                Authenticate
+            </button>
+            <p id="loginError" class="text-red-400 text-xs text-center hidden font-medium">รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</p>
+        </div>
+
+        <div class="text-center mt-8">
+            <a href="member.html" class="text-xs text-gray-500 hover:text-white transition-colors tracking-wider">
+                <i class="fa-solid fa-arrow-left mr-1.5"></i> กลับสู่หน้าแสดงสมาชิก
+            </a>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="dashboardSection" class="hidden w-full max-w-6xl glass-panel p-6 md:p-10 rounded-3xl anim-fade my-6">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/10 pb-6 mb-8 gap-4">
+            <div>
+                <span class="text-[10px] text-gray-500 tracking-[0.3em] uppercase font-bold">SYSTEM</span>
+                <h1 class="font-bebas text-4xl tracking-widest text-white mt-0.5">ADMIN CONTROL PANEL</h1>
+            </div>
+            <button id="logoutBtn" class="px-5 py-2.5 bg-white/5 border border-white/10 hover:bg-white hover:text-black text-xs rounded-xl transition-all font-bold tracking-wider uppercase">
+                <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
+            </button>
+        </div>
+
+        <div class="bg-white/[0.02] border border-white/5 p-6 md:p-8 rounded-2xl mb-10">
+            <h3 id="formTitle" class="text-xs font-bold uppercase tracking-[0.2em] text-gray-300 mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-circle-plus text-white"></i> เพิ่มสมาชิกใหม่เข้าสู่ระบบ
+            </h3>
+            <input type="hidden" id="editId">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                <div>
+                    <label class="text-[10px] text-gray-400 block mb-2 uppercase tracking-wider font-semibold">ชื่อสมาชิก</label>
+                    <input type="text" id="mName" placeholder="เช่น THEBOSS WINTERFELL" class="custom-input w-full rounded-xl px-4 py-3 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-400 block mb-2 uppercase tracking-wider font-semibold">หมวดหมู่ยศ</label>
+                    <select id="mRole" class="custom-input w-full rounded-xl px-4 py-3 text-xs">
+                        <option value="THE BOSS" class="bg-black">THE BOSS</option>
+                        <option value="LEADERS" class="bg-black">LEADERS</option>
+                        <option value="SUPPORT" class="bg-black">SUPPORT</option>
+                        <option value="MEMBER" class="bg-black">MEMBER</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-400 block mb-2 uppercase tracking-wider font-semibold">ลิงก์รูปภาพ (เว้นว่าง = ใช้ profile.png)</label>
+                    <input type="text" id="mImage" placeholder="https://..." class="custom-input w-full rounded-xl px-4 py-3 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-400 block mb-2 uppercase tracking-wider font-semibold">ลิงก์ Facebook</label>
+                    <input type="text" id="mFb" placeholder="https://facebook.com/..." class="custom-input w-full rounded-xl px-4 py-3 text-xs">
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <button id="saveMemberBtn" class="px-7 py-3 bg-white hover:bg-gray-200 text-black font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-white/5">
+                    บันทึกข้อมูล
+                </button>
+                <button id="cancelEditBtn" class="px-5 py-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-xs uppercase tracking-widest rounded-xl hidden transition-all border border-white/10">
+                    ยกเลิก
+                </button>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-gray-300">รายชื่อสมาชิกทั้งหมด</h3>
+            <span id="memberCount" class="text-[10px] text-gray-500 font-mono">0 MEMBERS</span>
+        </div>
+        
+        <div class="overflow-x-auto rounded-2xl border border-white/5 bg-black/40">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-white/[0.03] text-gray-400 uppercase tracking-widest text-[10px] border-b border-white/5">
+                    <tr>
+                        <th class="p-4 font-semibold">โปรไฟล์</th>
+                        <th class="p-4 font-semibold">ชื่อสมาชิก</th>
+                        <th class="p-4 font-semibold">ยศ</th>
+                        <th class="p-4 font-semibold">Facebook</th>
+                        <th class="p-4 font-semibold text-right">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="memberTableBody" class="divide-y divide-white/5"></tbody>
+            </table>
+        </div>
+
+        <div class="mt-8 text-center border-t border-white/5 pt-6">
+            <a href="member.html" class="text-xs text-gray-400 hover:text-white transition-colors tracking-widest uppercase">
+                <i class="fa-solid fa-arrow-left mr-2"></i> กลับสู่หน้าแสดงผลสมาชิกหลัก
+            </a>
+        </div>
+    </div>
+
+    <!-- FIRESTORE SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQi2rfC0z5Dzn_W1mticsWtMHK4XFbVD8",
+            authDomain: "elitecomeback-3dca4.firebaseapp.com",
+            projectId: "elitecomeback-3dca4",
+            storageBucket: "elitecomeback-3dca4.firebasestorage.app",
+            messagingSenderId: "569699341247",
+            appId: "1:569699341247:web:6e79040ef3ae4ef849070a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const ADMIN_PASSWORD = "@elitestyleadmin123";
+
+        function showToast(title, desc, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastDesc = document.getElementById('toastDesc');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastTitle.textContent = title;
+            toastDesc.textContent = desc;
+
+            if (isError) {
+                toastIcon.className = "w-7 h-7 rounded-full flex items-center justify-center text-white bg-red-600 font-bold text-xs";
+                toastIcon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            } else {
+                toastIcon.className = "w-7 h-7 rounded-full flex items-center justify-center text-black bg-white font-bold text-xs";
+                toastIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        const loginSection = document.getElementById('loginSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        
+        if(localStorage.getItem('elite_admin_logged') === 'true') {
+            loginSection.classList.add('hidden');
+            dashboardSection.classList.remove('hidden');
+            loadAdminData();
+        }
+
+        document.getElementById('loginBtn').addEventListener('click', authenticateAdmin);
+        document.getElementById('adminPass').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') authenticateAdmin();
+        });
+
+        function authenticateAdmin() {
+            const pass = document.getElementById('adminPass').value;
+            if(pass === ADMIN_PASSWORD) {
+                localStorage.setItem('elite_admin_logged', 'true');
+                loginSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+                loadAdminData();
+                showToast("ยินดีต้อนรับ", "เข้าสู่ระบบแอดมินสำเร็จ");
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+                showToast("เข้าสู่ระบบไม่สำเร็จ", "รหัสผ่านไม่ถูกต้อง", true);
+            }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('elite_admin_logged');
+            location.reload();
+        });
+
+        function loadAdminData() {
+            const tbody = document.getElementById('memberTableBody');
+            
+            onSnapshot(collection(db, "members"), (snapshot) => {
+                tbody.innerHTML = '';
+                if(snapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500 font-mono">NO MEMBERS FOUND IN DATABASE</td></tr>`;
+                    document.getElementById('memberCount').textContent = '0 MEMBERS';
+                    return;
+                }
+                
+                document.getElementById('memberCount').textContent = `${snapshot.size} MEMBERS`;
+
+                snapshot.forEach((docSnap) => {
+                    const m = docSnap.data();
+                    const id = docSnap.id;
+                    const imgSrc = (m.image && m.image.trim() !== "") ? m.image : 'profile.png';
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-white/[0.02] transition-colors">
+                            <td class="p-4">
+                                <img src="${imgSrc}" onerror="this.src='profile.png'" class="w-9 h-9 rounded-lg object-cover border border-white/10">
+                            </td>
+                            <td class="p-4 font-bold tracking-wide">${m.name}</td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] tracking-wider uppercase font-semibold">${m.role}</span>
+                            </td>
+                            <td class="p-4 text-gray-400 truncate max-w-[200px] font-mono text-[11px]">${m.facebook || '-'}</td>
+                            <td class="p-4 text-right space-x-2">
+                                <button onclick="editMember('${id}', '${m.name.replace(/'/g, "\\'")}', '${m.role}', '${m.image || ''}', '${m.facebook || ''}')" class="px-3 py-1.5 bg-white/5 hover:bg-white hover:text-black border border-white/10 rounded-lg text-[11px] font-bold transition-all">
+                                    แก้ไข
+                                </button>
+                                <button onclick="confirmDelete('${id}')" class="px-3 py-1.5 bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/20 rounded-lg text-[11px] font-bold transition-all">
+                                    ลบ
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        document.getElementById('saveMemberBtn').addEventListener('click', async () => {
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('mName').value.trim();
+            const role = document.getElementById('mRole').value;
+            const image = document.getElementById('mImage').value.trim();
+            const facebook = document.getElementById('mFb').value.trim();
+
+            if(!name) { 
+                showToast("แจ้งเตือน", "กรุณากรอกชื่อสมาชิกก่อนบันทึก", true);
+                return; 
+            }
+
+            const memberData = { name, role, image, facebook };
+
+            try {
+                if(id) {
+                    const docRef = doc(db, "members", id);
+                    await updateDoc(docRef, memberData);
+                    resetForm();
+                    showToast("สำเร็จ", "อัปเดตข้อมูลสมาชิกเรียบร้อยแล้ว");
+                } else {
+                    await addDoc(collection(db, "members"), memberData);
+                    resetForm();
+                    showToast("สำเร็จ", "เพิ่มสมาชิกใหม่เข้าสู่ระบบแล้ว");
+                }
+            } catch (error) {
+                showToast("เกิดข้อผิดพลาด", error.message, true);
+            }
+        });
+
+        window.editMember = function(id, name, role, image, facebook) {
+            document.getElementById('editId').value = id;
+            document.getElementById('mName').value = name;
+            document.getElementById('mRole').value = role;
+            document.getElementById('mImage').value = image !== 'undefined' ? image : '';
+            document.getElementById('mFb').value = facebook !== 'undefined' ? facebook : '';
+            
+            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-white"></i> แก้ไขข้อมูลสมาชิก';
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast("โหมดแก้ไข", `กำลังแก้ไขข้อมูลของ ${name}`);
+        }
+
+        document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+
+        function resetForm() {
+            document.getElementById('editId').value = '';
+            document.getElementById('mName').value = '';
+            document.getElementById('mImage').value = '';
+            document.getElementById('mFb').value = '';
+            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-circle-plus text-white"></i> เพิ่มสมาชิกใหม่เข้าสู่ระบบ';
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmBox = document.getElementById('confirmBox');
+        let deleteTargetId = null;
+
+        window.confirmDelete = function(id) {
+            deleteTargetId = id;
+            confirmModal.style.opacity = '1';
+            confirmModal.style.pointerEvents = 'auto';
+            confirmBox.style.transform = 'scale(1)';
+        }
+
+        document.getElementById('confirmNo').addEventListener('click', () => {
+            confirmModal.style.opacity = '0';
+            confirmModal.style.pointerEvents = 'none';
+            confirmBox.style.transform = 'scale(0.95)';
+            deleteTargetId = null;
+        });
+
+        document.getElementById('confirmYes').addEventListener('click', async () => {
+            if(deleteTargetId) {
+                try {
+                    await deleteDoc(doc(db, "members", deleteTargetId));
+                    showToast("สำเร็จ", "ลบสมาชิกออกจากระบบเรียบร้อยแล้ว");
+                } catch (error) {
+                    showToast("เกิดข้อผิดพลาด", error.message, true);
+                }
+            }
+            confirmModal.style.opacity = '0';
+            confirmModal.style.pointerEvents = 'none';
+            confirmBox.style.transform = 'scale(0.95)';
+            deleteTargetId = null;
+        });
+    </script>
+</body>
+</html>
