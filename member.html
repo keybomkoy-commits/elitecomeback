@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite - Member</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="elite.png">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'bebas': ['"Bebas Neue"', 'sans-serif'],
+                        'inter': ['"Inter"', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand-gold': '#a38751',
+                        'role-boss': '#d4af37',   
+                        'role-leader': '#ef4444', 
+                        'role-support': '#3b82f6',
+                        'role-member': '#22c55e', 
+                        'fb-blue': '#1877F2',     
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050505;
+            background-image: 
+                radial-gradient(circle at center, #111 0%, transparent 100%),
+                linear-gradient(45deg, #0a0a0a 25%, transparent 25%, transparent 75%, #0a0a0a 75%, #0a0a0a),
+                linear-gradient(45deg, #0a0a0a 25%, transparent 25%, transparent 75%, #0a0a0a 75%, #0a0a0a);
+            background-size: 100vw 100vh, 20px 20px, 20px 20px;
+            background-position: center, 0 0, 10px 10px;
+            color: #ffffff;
+            margin: 0;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .winter-particle {
+            position: fixed;
+            top: -40px;
+            object-fit: contain;
+            pointer-events: none;
+            z-index: 1;
+            animation: fallWinter linear infinite;
+        }
+        @keyframes fallWinter {
+            0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+            15% { opacity: 0.8; }
+            85% { opacity: 0.5; }
+            100% { transform: translateY(105vh) translateX(var(--winter-drift)) rotate(360deg); opacity: 0; }
+        }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a38751; }
+
+        @keyframes fadeInUpSmooth {
+            0% { opacity: 0; transform: translateY(40px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .anim-element {
+            opacity: 0;
+            animation: fadeInUpSmooth 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .glass-card {
+            background: rgba(15, 15, 15, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            transition: all 0.75s ease;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .glass-card:hover {
+            background: rgba(25, 25, 25, 0.85);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 35px -10px rgba(0,0,0,0.9), 0 0 15px rgba(255,255,255,0.03) inset;
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .glass-card:hover::before {
+            left: 150%;
+        }
+
+        #memberModal { 
+            opacity: 0; 
+            visibility: hidden; 
+            backdrop-filter: blur(0px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        #memberModal.active { 
+            opacity: 1; 
+            visibility: visible; 
+            backdrop-filter: blur(12px);
+        }
+        #modalContent { 
+            transform: scale(0.8) translateY(30px); 
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        #memberModal.active #modalContent { 
+            transform: scale(1) translateY(0); 
+            opacity: 1;
+        }
+
+        .clean-modal-box {
+            position: relative;
+            background: #09090c;
+            border-radius: 1.5rem;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .clean-modal-box::after {
+            content: ''; position: absolute; inset: -1px; border-radius: inherit;
+            background: linear-gradient(90deg, transparent, var(--neon-color), transparent, var(--neon-color), transparent);
+            background-size: 300% 300%; animation: smoothNeonRun 8s ease infinite; z-index: -1; opacity: 0.35;
+        }
+        @keyframes smoothNeonRun { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        @keyframes pulseDot { 0% { box-shadow: 0 0 0 0 rgba(34,197,94, 0.6); } 70% { box-shadow: 0 0 0 4px rgba(34,197,94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94, 0); } }
+        .status-online { animation: pulseDot 2s infinite; }
+        
+        #no-results { display: none; }
+        
+        .fade-transition { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .fade-out { opacity: 0; transform: translateY(15px) scale(0.98); }
+        
+        .nav-btn {
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .role-tab {
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                        opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                        filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform, opacity, filter;
+        }
+        .role-name {
+            transition: color 0.6s ease, text-shadow 0.6s ease;
+            will-change: color, text-shadow;
+        }
+        .role-count {
+            transition: opacity 0.6s ease, color 0.6s ease;
+        }
+    </style>
+</head>
+<body class="font-inter min-h-screen flex flex-col justify-between pb-10">
+
+    <div id="winterContainer" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+    <nav class="w-full px-4 md:px-8 py-6 flex justify-between items-center fixed top-0 left-0 z-50 pointer-events-none">
+        <div class="flex gap-3 relative pointer-events-auto anim-element" style="animation-delay: 0.1s;">
+            <a href="index.html" class="w-10 h-10 bg-black/60 border border-white/10 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-all backdrop-blur-md shadow-lg" title="หน้าแรก">
+                <i class="fa-solid fa-house text-sm"></i>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61593395581546" target="_blank" class="w-10 h-10 bg-black/60 border border-white/10 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#1877F2] transition-all backdrop-blur-md shadow-lg" title="แฟนเพจ">
+                <i class="fa-brands fa-facebook text-base"></i>
+            </a>
+        </div>
+        
+        <div class="pointer-events-auto anim-element flex items-center gap-2" style="animation-delay: 0.15s;">
+            <button id="togglePlayBtn" class="px-3.5 h-10 bg-black/60 border border-white/15 rounded-xl flex items-center gap-2 text-gray-300 hover:text-white transition-all backdrop-blur-md shadow-lg hover:border-white/40 cursor-pointer">
+                <span class="w-2 h-2 rounded-full bg-green-500 transition-all" id="playDot"></span>
+                <i id="playIcon" class="fa-solid fa-pause text-[10px]"></i>
+                <span id="playText" class="text-[11px] font-sans font-medium tracking-wide">เลื่อนอัตโนมัติ: เปิด</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- เครื่องเล่นเพลงลอยฟ้า ซิงค์ข้ามหน้า -->
+    <div class="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-black/80 border border-brand-gold/40 px-4 py-2.5 rounded-xl backdrop-blur-md shadow-[0_10px_25px_rgba(0,0,0,0.9)]">
+        <button id="musicToggleBtn" class="w-8 h-8 rounded-lg bg-brand-gold/20 text-brand-gold flex items-center justify-center hover:bg-brand-gold hover:text-black transition-all">
+            <i id="musicIcon" class="fa-solid fa-volume-high text-xs"></i>
+        </button>
+        <div class="flex flex-col">
+            <span class="text-[10px] font-bold text-brand-gold tracking-widest uppercase">Hail to the King</span>
+            <div class="flex items-center gap-2 mt-0.5">
+                <input type="range" id="volumeSlider" min="0" max="100" value="20" class="w-20 accent-[#a38751] h-1 bg-gray-800 rounded-lg cursor-pointer">
+                <span id="volumeText" class="text-[9px] text-gray-400 font-mono">20%</span>
+            </div>
+        </div>
+        <a href="https://youtu.be/MjwttGizNEs?si=UcpXQe9Qk-NBlJNF" target="_blank" title="เพลงต้นฉบับ" class="ml-1 w-7 h-7 rounded-lg bg-white/5 text-gray-400 hover:text-white flex items-center justify-center transition-all border border-white/10">
+            <i class="fa-solid fa-link text-[10px]"></i>
+        </a>
+    </div>
+
+    <div class="relative z-10 w-full overflow-hidden">
+        <header class="w-full mt-24 md:mt-20 mb-6 flex flex-col items-center relative z-10 anim-element" style="animation-delay: 0.2s;">
+            <h1 class="font-bebas text-6xl md:text-8xl leading-none tracking-widest text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] text-center">ELITE GANG</h1>
+            
+            <div class="relative w-full max-w-md px-6 mt-6 md:mt-8">
+                <i class="fa-solid fa-magnifying-glass absolute left-10 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
+                <input type="text" id="searchInput" placeholder="SEARCH ALL MEMBERS..." class="w-full bg-black/40 border border-white/10 rounded-full py-3.5 pl-11 pr-5 text-xs text-gray-200 focus:outline-none focus:border-white/40 focus:bg-black/80 transition-all backdrop-blur-md shadow-lg">
+            </div>
+        </header>
+
+        <div id="roleNavigator" class="w-full max-w-5xl mx-auto px-14 md:px-24 mb-10 z-10 relative anim-element flex items-center justify-center group" style="animation-delay: 0.3s;">
+            <button id="prevBtn" class="nav-btn absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full text-gray-400 flex items-center justify-center z-20">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            
+            <div id="roleTabs" class="w-full flex items-center justify-start md:justify-start gap-12 md:gap-20 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-6 px-8">
+                <!-- โครงสร้างแท็บหมวดหมู่ -->
+            </div>
+
+            <button id="nextBtn" class="nav-btn absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full text-gray-400 flex items-center justify-center z-20">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <main class="w-full max-w-7xl mx-auto px-4 md:px-6 flex flex-col relative z-10 min-h-[300px]" id="membersContainer">
+            <div id="no-results" class="text-center py-20 w-full"><i class="fa-solid fa-ghost text-5xl text-gray-700 mb-4 drop-shadow-md"></i><h2 class="font-bebas text-3xl text-gray-500 tracking-widest">NO MEMBERS FOUND</h2></div>
+            <div id="sectionsWrapper" class="fade-transition flex flex-wrap justify-center gap-5 md:gap-6 pb-10"></div>
+        </main>
+    </div>
+
+    <footer class="w-full text-center mt-10 relative z-10 pb-6">
+        <a href="admin.html" class="text-[10px] text-gray-600 hover:text-gray-300 tracking-widest uppercase transition-colors px-3 py-1.5 rounded bg-white/[0.02] border border-white/5 hover:bg-white/10">
+            Admin Management
+        </a>
+    </footer>
+
+    <div id="memberModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40"></div> 
+        
+        <div id="modalContent" class="clean-modal-box relative w-full max-w-[760px] flex flex-col md:flex-row z-10">
+            <button id="closeModal" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 hover:bg-white/20 text-gray-400 hover:text-white flex items-center justify-center transition-all z-30 border border-white/10 backdrop-blur-md">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="w-full md:w-[45%] h-[280px] md:h-[360px] bg-[#0a0a0a] rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none overflow-hidden shrink-0 flex items-center justify-center relative">
+                <img id="modalImg" src="" alt="Member Profile" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-black/80"></div>
+            </div>
+            <div class="w-full md:w-[55%] p-8 md:p-10 flex flex-col justify-center relative z-20">
+                <div class="flex items-center gap-2 mb-3">
+                    <span id="modalUniqueId" class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-gray-400 font-mono tracking-widest">ELITE GANG</span>
+                    <div class="w-1.5 h-1.5 rounded-full bg-green-500 status-online"></div>
+                </div>
+                <h2 id="modalName" class="font-bebas text-4xl md:text-5xl tracking-wide text-white uppercase leading-none mb-2 drop-shadow-md"></h2>
+                <p id="modalRoleSub" class="text-xs tracking-[0.25em] uppercase font-bold mb-8"></p>
+                <div class="flex items-center gap-3">
+                    <a id="modalFbBtn" href="#" target="_blank" class="flex-1 py-3.5 px-5 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg hover:scale-[1.03] active:scale-95">
+                        <i class="fa-brands fa-facebook text-base"></i> Facebook
+                    </a>
+                    <button id="closeModalBtn" class="py-3.5 px-6 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-gray-300 hover:text-white font-bold text-xs uppercase tracking-widest transition-all backdrop-blur-md hover:scale-[1.03] active:scale-95">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const winterContainer = document.getElementById('winterContainer');
+        const winterCount = 20; 
+        for (let i = 0; i < winterCount; i++) {
+            let item = document.createElement('img');
+            item.src = 'winter.png';
+            item.classList.add('winter-particle');
+            let size = Math.random() * 20 + 15;
+            item.style.width = size + 'px';
+            item.style.left = Math.random() * 100 + 'vw';
+            let duration = Math.random() * 15 + 10;
+            item.style.animationDuration = duration + 's';
+            let delay = Math.random() * 10;
+            item.style.animationDelay = delay + 's';
+            let drift = (Math.random() - 0.5) * 150 + 'px';
+            item.style.setProperty('--winter-drift', drift);
+            let opacity = Math.random() * 0.4 + 0.2;
+            item.style.opacity = opacity;
+            winterContainer.appendChild(item);
+        }
+    </script>
+
+    <!-- Firestore SDK & Script + ระบบเพลงข้ามหน้าต่อเนื่อง -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQi2rfC0z5Dzn_W1mticsWtMHK4XFbVD8",
+            authDomain: "elitecomeback-3dca4.firebaseapp.com",
+            projectId: "elitecomeback-3dca4",
+            storageBucket: "elitecomeback-3dca4.firebasestorage.app",
+            messagingSenderId: "569699341247",
+            appId: "1:569699341247:web:6e79040ef3ae4ef849070a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const roleConfig = {
+            'THE BOSS': { color: '#d4af37', textClass: 'text-role-boss', btnClass: 'bg-[#d4af37] text-black hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]' },
+            'LEADERS': { color: '#ef4444', textClass: 'text-role-leader', btnClass: 'bg-red-600 text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]' },
+            'SUPPORT': { color: '#3b82f6', textClass: 'text-role-support', btnClass: 'bg-blue-600 text-white hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]' },
+            'MEMBER': { color: '#22c55e', textClass: 'text-role-member', btnClass: 'bg-green-600 text-white hover:shadow-[0_0_20px_rgba(34,197,94,0.4)]' }
+        };
+
+        const roleKeys = ['THE BOSS', 'LEADERS', 'SUPPORT', 'MEMBER'];
+        let currentRoleIndex = 0;
+        let allMembers = [];
+        let groupedMembers = { 'THE BOSS': [], 'LEADERS': [], 'SUPPORT': [], 'MEMBER': [] };
+
+        let autoPlayInterval;
+        let isAutoPlayRunning = true;
+        const AUTOPLAY_DELAY = 6000; 
+
+        const wrapper = document.getElementById('sectionsWrapper');
+        const roleTabsContainer = document.getElementById('roleTabs');
+        const togglePlayBtn = document.getElementById('togglePlayBtn');
+        const playIcon = document.getElementById('playIcon');
+        const playText = document.getElementById('playText');
+        const playDot = document.getElementById('playDot');
+
+        function initRoleTabs() {
+            roleTabsContainer.innerHTML = '';
+            roleKeys.forEach((roleKey, index) => {
+                const tabElement = document.createElement('div');
+                tabElement.className = `role-tab cursor-pointer flex flex-col items-center justify-center select-none shrink-0 snap-center px-6`;
+                tabElement.id = `tab-${index}`;
+                
+                tabElement.innerHTML = `
+                    <h2 class="role-name font-bebas text-4xl md:text-5xl lg:text-6xl tracking-[0.1em] pointer-events-none">${roleKey}</h2>
+                    <span class="role-count text-[10px] md:text-xs font-bebas mt-1 tracking-widest pointer-events-none">/ 00</span>
+                `;
+                
+                tabElement.onclick = () => {
+                    if (currentRoleIndex !== index) {
+                        changeCategory(index);
+                    }
+                };
+                
+                roleTabsContainer.appendChild(tabElement);
+            });
+            updateRoleTabs();
+        }
+
+        function updateRoleTabs() {
+            roleKeys.forEach((roleKey, index) => {
+                const isActive = index === currentRoleIndex;
+                const cfg = roleConfig[roleKey];
+                const count = groupedMembers[roleKey] ? groupedMembers[roleKey].length : 0;
+                
+                const tabElement = document.getElementById(`tab-${index}`);
+                if(!tabElement) return;
+
+                const nameEl = tabElement.querySelector('.role-name');
+                const countEl = tabElement.querySelector('.role-count');
+                
+                if (nameEl) nameEl.textContent = roleKey;
+                if (countEl) countEl.textContent = `/ ${String(count).padStart(2, '0')}`;
+
+                if (isActive) {
+                    tabElement.style.transform = 'scale(1.15)';
+                    tabElement.style.opacity = '1';
+                    tabElement.style.filter = 'blur(0px)';
+                    if (nameEl) {
+                        nameEl.style.color = cfg.color;
+                        nameEl.style.textShadow = `0 0 25px ${cfg.color}90`;
+                    }
+                    if (countEl) {
+                        countEl.style.color = '#e5e7eb';
+                        countEl.style.opacity = '1';
+                    }
+                } else {
+                    tabElement.style.transform = 'scale(0.65)';
+                    tabElement.style.opacity = '0.4';
+                    tabElement.style.filter = 'blur(1px)';
+                    if (nameEl) {
+                        nameEl.style.color = '#6b7280';
+                        nameEl.style.textShadow = 'none';
+                    }
+                    if (countEl) {
+                        countEl.style.color = 'transparent';
+                        countEl.style.opacity = '0';
+                    }
+                }
+            });
+        }
+
+        initRoleTabs();
+
+        onSnapshot(collection(db, "members"), (snapshot) => {
+            allMembers = [];
+            groupedMembers = { 'THE BOSS': [], 'LEADERS': [], 'SUPPORT': [], 'MEMBER': [] };
+            
+            if (!snapshot.empty) {
+                snapshot.forEach((docSnap) => {
+                    const item = docSnap.data();
+                    item.id = docSnap.id;
+                    allMembers.push(item);
+                    if (groupedMembers[item.role]) {
+                        groupedMembers[item.role].push(item);
+                    }
+                });
+            }
+            
+            updateRoleTabs();
+            renderCurrentRole();
+        });
+
+        function startAutoPlay() {
+            if (!isAutoPlayRunning) return;
+            clearInterval(autoPlayInterval);
+            autoPlayInterval = setInterval(() => {
+                const nextIndex = (currentRoleIndex + 1) % roleKeys.length;
+                changeCategory(nextIndex, false); 
+            }, AUTOPLAY_DELAY);
+        }
+
+        function resetAutoPlay() {
+            if (isAutoPlayRunning) {
+                startAutoPlay();
+            }
+        }
+
+        togglePlayBtn.addEventListener('click', () => {
+            isAutoPlayRunning = !isAutoPlayRunning;
+            if (isAutoPlayRunning) {
+                playIcon.className = "fa-solid fa-pause text-[10px]";
+                playText.textContent = "เลื่อนอัตโนมัติ: เปิด";
+                playDot.className = "w-2 h-2 rounded-full bg-green-500 transition-all";
+                togglePlayBtn.classList.add('border-white/30');
+                startAutoPlay();
+            } else {
+                clearInterval(autoPlayInterval);
+                playIcon.className = "fa-solid fa-play text-[10px]";
+                playText.textContent = "เลื่อนอัตโนมัติ: ปิด";
+                playDot.className = "w-2 h-2 rounded-full bg-gray-500 transition-all";
+                togglePlayBtn.classList.remove('border-white/30');
+            }
+        });
+
+        function changeCategory(index, userAction = true) {
+            currentRoleIndex = index;
+            updateRoleTabs();
+            renderCurrentRole();
+            
+            const activeTab = document.getElementById(`tab-${index}`);
+            if (activeTab) {
+                activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+            
+            if (userAction && isAutoPlayRunning) {
+                resetAutoPlay();
+            }
+        }
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            const prevIndex = (currentRoleIndex - 1 + roleKeys.length) % roleKeys.length;
+            changeCategory(prevIndex);
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            const nextIndex = (currentRoleIndex + 1) % roleKeys.length;
+            changeCategory(nextIndex);
+        });
+
+        function renderCurrentRole() {
+            const roleKey = roleKeys[currentRoleIndex];
+            const cfg = roleConfig[roleKey];
+            const membersToDisplay = groupedMembers[roleKey] || [];
+
+            wrapper.classList.add('fade-out');
+            
+            setTimeout(() => {
+                wrapper.innerHTML = '';
+                document.getElementById('no-results').style.display = 'none';
+
+                if (membersToDisplay.length === 0) {
+                    wrapper.innerHTML = `<p class="text-gray-500 font-bebas text-2xl tracking-widest mt-10 opacity-50">NO ${roleKey} FOUND</p>`;
+                } else {
+                    let html = '';
+                    const count = membersToDisplay.length;
+                    let cardWidth = "w-[300px] md:w-[340px]"; 
+                    let imgSize = "w-[68px] h-[68px]";
+                    let nameSize = "text-[18px]";
+                    
+                    if (count > 2 && count <= 5) {
+                        cardWidth = "w-[280px] md:w-[310px]";
+                        imgSize = "w-[60px] h-[60px]";
+                        nameSize = "text-[16px]";
+                    } else if (count > 5) {
+                        cardWidth = "w-[250px] md:w-[280px]";
+                        imgSize = "w-[52px] h-[52px]";
+                        nameSize = "text-[14px]";
+                    }
+
+                    membersToDisplay.forEach((m, i) => {
+                        const imgSrc = (m.image && m.image.trim() !== "") ? m.image : 'profile.png';
+                        const animDelay = (i * 0.04) + 0.1; 
+                        
+                        html += `
+                            <div class="member-card glass-card ${cardWidth} rounded-2xl p-5 flex items-center gap-4 group anim-element"
+                                 style="animation-delay: ${animDelay}s;"
+                                 data-name="${m.name}" data-role="${roleKey}" data-color="${cfg.color}" data-text-color="${cfg.textClass}" data-bg-btn="${cfg.btnClass}" data-fb="${m.facebook || '#'}">
+                                <div class="relative shrink-0 z-10">
+                                    <img src="${imgSrc}" onerror="this.src='profile.png'" class="member-img ${imgSize} rounded-xl object-cover border border-white/10 group-hover:border-white/30 transition-colors duration-300">
+                                    <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-[#151515] status-online shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+                                </div>
+                                <div class="flex flex-col justify-center overflow-hidden z-10 flex-1">
+                                    <div class="flex items-center gap-1.5 mb-1 opacity-90">
+                                        <i class="fa-solid fa-star ${cfg.textClass} text-[9px] group-hover:animate-spin"></i>
+                                        <p class="member-role text-[10px] tracking-[0.2em] ${cfg.textClass} uppercase font-bold">${roleKey}</p>
+                                    </div>
+                                    <h3 class="member-name ${nameSize} font-bold text-white tracking-wide truncate group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-400 transition-all duration-300">${m.name}</h3>
+                                    <span class="text-fb-blue/80 group-hover:text-fb-blue text-[11px] font-medium mt-1 transition-colors flex items-center gap-1"><i class="fa-regular fa-id-card"></i> View Profile</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    wrapper.innerHTML = html;
+                }
+                wrapper.classList.remove('fade-out');
+                initModalEvents();
+            }, 350); 
+        }
+
+        function initModalEvents() {
+            const modal = document.getElementById('memberModal');
+            const modalContent = document.getElementById('modalContent');
+            const cards = document.querySelectorAll('.member-card');
+
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const name = card.getAttribute('data-name');
+                    const role = card.getAttribute('data-role');
+                    const colorCode = card.getAttribute('data-color');
+                    const textColorClass = card.getAttribute('data-text-color');
+                    const btnClass = card.getAttribute('data-bg-btn');
+                    const fb = card.getAttribute('data-fb');
+                    const imgSrc = card.querySelector('.member-img').src;
+
+                    modalContent.style.setProperty('--neon-color', colorCode);
+                    document.getElementById('modalImg').src = imgSrc;
+                    document.getElementById('modalName').textContent = name;
+                    
+                    const roleSub = document.getElementById('modalRoleSub');
+                    roleSub.textContent = `${role} / ELITE`;
+                    roleSub.className = `text-xs tracking-[0.25em] uppercase font-bold mb-8 ${textColorClass}`;
+                    
+                    const fbBtn = document.getElementById('modalFbBtn');
+                    fbBtn.href = fb;
+                    fbBtn.className = `flex-1 py-3.5 px-5 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg hover:scale-[1.03] active:scale-95 ${btnClass}`;
+
+                    clearInterval(autoPlayInterval);
+                    modal.classList.add('active');
+                });
+            });
+        }
+
+        const modal = document.getElementById('memberModal');
+        const closeModalAction = () => { 
+            modal.classList.remove('active'); 
+            resetAutoPlay(); 
+        };
+        
+        document.getElementById('closeModal').addEventListener('click', closeModalAction);
+        document.getElementById('closeModalBtn').addEventListener('click', closeModalAction);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModalAction(); });
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().trim();
+            const roleNavigator = document.getElementById('roleNavigator');
+            
+            if (term === "") {
+                roleNavigator.style.opacity = '1';
+                roleNavigator.style.pointerEvents = 'auto';
+                roleNavigator.style.height = 'auto';
+                changeCategory(currentRoleIndex); 
+                return;
+            }
+
+            clearInterval(autoPlayInterval);
+            roleNavigator.style.opacity = '0';
+            roleNavigator.style.pointerEvents = 'none';
+            setTimeout(() => { 
+                if (term !== "") {
+                    roleNavigator.style.height = '0'; 
+                }
+            }, 300);
+
+            wrapper.innerHTML = '';
+            let visibleCount = 0;
+            let html = '';
+
+            allMembers.forEach((m, i) => {
+                const name = m.name.toLowerCase();
+                const role = m.role.toLowerCase();
+                if(name.includes(term) || role.includes(term)) {
+                    const cfg = roleConfig[m.role] || roleConfig['MEMBER'];
+                    const imgSrc = (m.image && m.image.trim() !== "") ? m.image : 'profile.png';
+                    const animDelay = (visibleCount * 0.05) + 0.1; 
+                    
+                    html += `
+                        <div class="member-card glass-card w-[280px] rounded-2xl p-4 flex items-center gap-4 group anim-element"
+                             style="animation-delay: ${animDelay}s;"
+                             data-name="${m.name}" data-role="${m.role}" data-color="${cfg.color}" data-text-color="${cfg.textClass}" data-bg-btn="${cfg.btnClass}" data-fb="${m.facebook || '#'}">
+                            <div class="relative shrink-0 z-10">
+                                <img src="${imgSrc}" onerror="this.src='profile.png'" class="member-img w-[56px] h-[56px] rounded-xl object-cover border border-white/10 group-hover:border-white/30 transition-colors duration-300">
+                                <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-[#151515] status-online shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+                            </div>
+                            <div class="flex flex-col justify-center overflow-hidden z-10 flex-1">
+                                <div class="flex items-center gap-1.5 mb-1 opacity-90">
+                                    <i class="fa-solid fa-star ${cfg.textClass} text-[8px] group-hover:animate-spin"></i>
+                                    <p class="member-role text-[9px] tracking-[0.2em] ${cfg.textClass} uppercase font-bold">${m.role}</p>
+                                </div>
+                                <h3 class="member-name text-[15px] font-bold text-white tracking-wide truncate group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-400 transition-all duration-300">${m.name}</h3>
+                                <span class="text-fb-blue/80 group-hover:text-fb-blue text-[10px] font-medium mt-1 transition-colors flex items-center gap-1"><i class="fa-regular fa-id-card"></i> View Profile</span>
+                            </div>
+                        </div>
+                    `;
+                    visibleCount++;
+                }
+            });
+
+            wrapper.innerHTML = html;
+            document.getElementById('no-results').style.display = visibleCount === 0 ? 'block' : 'none';
+            initModalEvents();
+        });
+
+        startAutoPlay();
+    </script>
+
+    <!-- ระบบเพลงข้ามหน้าต่อเนื่อง (แก้ไข Fade-in และ Autoplay ผ่านระบบคลิกครั้งแรก) -->
+    <script>
+        let savedTime = sessionStorage.getItem('elite_music_time');
+        let savedVol = sessionStorage.getItem('elite_music_vol');
+        let targetVol = savedVol !== null ? parseFloat(savedVol) : 0.2; 
+
+        let bgMusic = new Audio('music.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0; 
+        if (savedTime) bgMusic.currentTime = parseFloat(savedTime);
+
+        const musicToggleBtn = document.getElementById('musicToggleBtn');
+        const musicIcon = document.getElementById('musicIcon');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeText = document.getElementById('volumeText');
+
+        volumeSlider.value = targetVol * 100;
+        volumeText.textContent = Math.round(targetVol * 100) + '%';
+
+        let isUserInteracted = false;
+
+        function startAudioPlayback() {
+            if (isUserInteracted) return;
+            isUserInteracted = true;
+
+            bgMusic.play().then(() => {
+                let currentFadeVol = 0;
+                let fadeInterval = setInterval(() => {
+                    currentFadeVol += 0.01;
+                    if (currentFadeVol >= targetVol) {
+                        bgMusic.volume = targetVol;
+                        clearInterval(fadeInterval);
+                    } else {
+                        bgMusic.volume = currentFadeVol;
+                    }
+                }, 40);
+
+                musicIcon.className = "fa-solid fa-volume-high text-xs";
+                sessionStorage.setItem('elite_music_playing', 'true');
+            }).catch(err => {
+                console.log("Autoplay prevented:", err);
+                isUserInteracted = false;
+            });
+        }
+
+        window.addEventListener('click', startAudioPlayback, { once: true });
+        window.addEventListener('keydown', startAudioPlayback, { once: true });
+
+        musicToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (bgMusic.paused) {
+                bgMusic.play();
+                bgMusic.volume = targetVol;
+                musicIcon.className = "fa-solid fa-volume-high text-xs";
+                sessionStorage.setItem('elite_music_playing', 'true');
+            } else {
+                bgMusic.pause();
+                musicIcon.className = "fa-solid fa-volume-xmark text-xs";
+                sessionStorage.setItem('elite_music_playing', 'false');
+            }
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            e.stopPropagation();
+            let val = e.target.value;
+            targetVol = val / 100;
+            bgMusic.volume = targetVol;
+            sessionStorage.setItem('elite_music_vol', targetVol);
+            volumeText.textContent = val + '%';
+            if (targetVol > 0 && bgMusic.paused) {
+                bgMusic.play();
+            }
+            if (targetVol == 0) {
+                musicIcon.className = "fa-solid fa-volume-xmark text-xs";
+            } else {
+                musicIcon.className = "fa-solid fa-volume-high text-xs";
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            sessionStorage.setItem('elite_music_time', bgMusic.currentTime);
+            sessionStorage.setItem('elite_music_vol', bgMusic.volume);
+        });
+    </script>
+</body>
+</html>
